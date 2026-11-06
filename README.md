@@ -73,6 +73,15 @@ Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
 - No `preamble_detect` knob (RadioLib derives the FSK preamble detector
   length automatically in `beginFSK`).
 
+## AI disclosure
+
+This project was developed with AI assistance (OpenCode). Every radio
+behavior claimed here — pinout, RF-switch handling, LoRa and FSK links,
+packet_transport operation — was verified live, over the air, on real
+XIAO ESP32S3 + Wio-SX1262 V1.0 hardware before being committed. The
+tests in this repo check schemas, codegen, and builds; the air tests
+checked reality.
+
 ## Develop / test (uv)
 
 ```sh

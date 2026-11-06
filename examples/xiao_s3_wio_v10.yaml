@@ -1,0 +1,68 @@
+# Example: Seeed XIAO ESP32S3 + Wio-SX1262 V1.0 header board (stacked D-to-D).
+#
+# Pin mapping (XIAO D-label -> GPIO):
+#   MOSI D10/GPIO9, MISO D9/GPIO8, SCK D8/GPIO7,
+#   DIO1 D1/GPIO2, RST D2/GPIO3, BUSY D3/GPIO4, NSS D4/GPIO5, RF_SW D5/GPIO6
+#
+# For the B2B kit version use cs_pin 41 / dio1 39 / rst 42 / busy 40 and
+# rxen_pin 38 instead (same component, different pins).
+
+esphome:
+  name: lora-test-rl
+  friendly_name: LoRa Test RL
+
+esp32:
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+
+wifi:
+  ssid: "dummy"
+  password: "dummy12345"
+  ap:
+    ssid: "LoRa Test RL"
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [sx126x_radiolib]
+
+sx126x_radiolib:
+  id: radio
+  cs_pin: GPIO5
+  sck_pin: GPIO7
+  mosi_pin: GPIO9
+  miso_pin: GPIO8
+  dio1_pin: GPIO2
+  busy_pin: GPIO4
+  rst_pin: GPIO3
+  rxen_pin: GPIO6
+  rf_switch: true
+  hw_version: sx1262
+  modulation: LORA
+  frequency: 868.0MHz
+  bandwidth: 125_0kHz
+  spreading_factor: 9
+  coding_rate: CR_4_7
+  sync_value: [0x12]
+  preamble_size: 8
+  crc_enable: true
+  pa_power: 10
+  tcxo_voltage: 1_8V
+  on_packet:
+    then:
+      - lambda: |-
+          ESP_LOGI("lora", "rx len=%d rssi=%.1f snr=%.1f", x.size(), rssi, snr);
+
+button:
+  - platform: template
+    name: "Transmit Packet"
+    on_press:
+      then:
+        - sx126x_radiolib.send_packet:
+            data: [0xC5, 0x51, 0x78, 0x82]

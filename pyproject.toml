@@ -1,0 +1,19 @@
+[project]
+name = "esphome-sx126x-radiolib"
+version = "0.1.0"
+description = "ESPHome external component: SX126x LoRa via RadioLib, with MCU-driven RX/TX switch pins"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "esphome==2026.10.2",
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv]
+environments = ["sys_platform == 'darwin' and platform_machine == 'arm64'"]

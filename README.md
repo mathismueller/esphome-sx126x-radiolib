@@ -66,7 +66,9 @@ Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
 - v1: LoRa only (`modulation: LORA`, SF 7–12). Anything else fails validation
   with a clear error. FSK/GFSK/MSK/GMSK share the scaffolding and can follow.
 - SF6 implicit-header mode: rejected for now (same reason).
-- `packet_transport` shim: planned (separate iteration).
+- `packet_transport` platform: shipped
+  (`packet_transport/sx126x_radiolib`, mirrors the core platform).
+  See `examples/packet_transport.yaml`.
 - No `run_image_cal` action (RadioLib handles image calibration during `begin()`).
 
 ## Develop / test (uv)

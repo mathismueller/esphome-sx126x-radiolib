@@ -3,9 +3,8 @@
 import importlib.util
 import sys
 
-import pytest
-
 import esphome.config_validation as cv
+import pytest
 
 
 def load_platform(comp):
@@ -16,9 +15,7 @@ def load_platform(comp):
     comp.__path__ = [str(Path(comp.__file__).parent)]
     sys.modules["sxpt_pkg"] = comp
     path = Path(comp.__file__).parent / "packet_transport" / "__init__.py"
-    spec = importlib.util.spec_from_file_location(
-        "sxpt_pkg.packet_transport", path
-    )
+    spec = importlib.util.spec_from_file_location("sxpt_pkg.packet_transport", path)
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     sys.modules["sxpt_pkg.packet_transport"] = mod

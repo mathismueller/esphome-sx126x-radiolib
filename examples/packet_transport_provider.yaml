@@ -1,0 +1,65 @@
+# packet_transport provider: broadcasts shared_counter over sx126x_radiolib.
+esphome:
+  name: lora-provider
+  friendly_name: LoRa Provider
+
+esp32:
+  board: seeed_xiao_esp32s3
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+
+wifi:
+  ssid: "dummy"
+  password: "dummy12345"
+  ap:
+    ssid: "LoRa Provider"
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [sx126x_radiolib]
+
+sx126x_radiolib:
+  id: radio
+  cs_pin: GPIO5
+  sck_pin: GPIO7
+  mosi_pin: GPIO9
+  miso_pin: GPIO8
+  dio1_pin: GPIO2
+  busy_pin: GPIO4
+  rst_pin: GPIO3
+  rxen_pin: GPIO6
+  rf_switch: true
+  hw_version: sx1262
+  modulation: LORA
+  frequency: 868.0MHz
+  bandwidth: 125_0kHz
+  spreading_factor: 9
+  coding_rate: CR_4_7
+  sync_value: [0x12]
+  preamble_size: 8
+  crc_enable: true
+  pa_power: 10
+  tcxo_voltage: 1_8V
+
+sensor:
+  - platform: template
+    id: shared_counter
+    name: "Shared Counter"
+    lambda: |-
+      static int n = 0;
+      return (float) (n++ % 1000);
+    update_interval: 10s
+
+packet_transport:
+  - platform: sx126x_radiolib
+    id: transport
+    sx126x_radiolib_id: radio
+    sensors:
+      - shared_counter

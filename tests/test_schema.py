@@ -1,8 +1,7 @@
 """Unit tests for the sx126x_radiolib CONFIG_SCHEMA (no toolchain needed)."""
 
-import pytest
-
 import esphome.config_validation as cv
+import pytest
 
 
 def minimal_config(**overrides):

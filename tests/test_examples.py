@@ -65,9 +65,7 @@ def test_example_codegen(example, tmp_path):
         f"--- stderr ---\n{proc.stderr[-4000:]}"
     )
     generated = [
-        p
-        for p in tmp_path.rglob("main.cpp")
-        if "build" in p.parts and p.parent.name == "src"
+        p for p in tmp_path.rglob("main.cpp") if "build" in p.parts and p.parent.name == "src"
     ]
     assert generated, "codegen produced no main.cpp"
     src = generated[0].read_text()

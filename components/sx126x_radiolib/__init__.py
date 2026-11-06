@@ -1,9 +1,9 @@
 from typing import Any
 
-from esphome import automation, pins
 import esphome.codegen as cg
-from esphome.components.const import CONF_CRC_ENABLE, CONF_ON_PACKET
 import esphome.config_validation as cv
+from esphome import automation, pins
+from esphome.components.const import CONF_CRC_ENABLE, CONF_ON_PACKET
 from esphome.const import CONF_DATA, CONF_FREQUENCY, CONF_ID
 from esphome.core import ID
 from esphome.cpp_generator import MockObj
@@ -108,18 +108,14 @@ def validate_raw_data(value: Any) -> bytes | list[int]:
         return value.encode("utf-8")
     if isinstance(value, list):
         return cv.Schema([cv.hex_uint8_t])(value)
-    raise cv.Invalid(
-        "data must either be a string wrapped in quotes or a list of bytes"
-    )
+    raise cv.Invalid("data must either be a string wrapped in quotes or a list of bytes")
 
 
 def validate_config(config: ConfigType) -> ConfigType:
     if config[CONF_PREAMBLE_SIZE] < 6:
         raise cv.Invalid("Minimum 'preamble_size' is 6 with LORA")
     if config[CONF_SPREADING_FACTOR] < 7:
-        raise cv.Invalid(
-            "Spreading factor 6 (implicit header mode) is not supported yet, use 7-12"
-        )
+        raise cv.Invalid("Spreading factor 6 (implicit header mode) is not supported yet, use 7-12")
     if len(config[CONF_SYNC_VALUE]) > 2:
         raise cv.Invalid("'sync_value' takes at most 2 bytes with LORA")
     return config
@@ -158,9 +154,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_PREAMBLE_SIZE, default=8): cv.int_range(min=1, max=65535),
             cv.Optional(CONF_RX_START, default=True): cv.boolean,
             cv.Optional(CONF_SPREADING_FACTOR, default=9): cv.int_range(min=6, max=12),
-            cv.Optional(CONF_SYNC_VALUE, default=[0x12]): cv.ensure_list(
-                cv.hex_uint8_t
-            ),
+            cv.Optional(CONF_SYNC_VALUE, default=[0x12]): cv.ensure_list(cv.hex_uint8_t),
             cv.Optional(CONF_TCXO_VOLTAGE, default="NONE"): cv.enum(TCXO_VOLTAGE),
             cv.Optional(CONF_TCXO_DELAY, default="5ms"): cv.positive_time_period,
         }

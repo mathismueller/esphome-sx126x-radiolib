@@ -1,10 +1,10 @@
 import esphome.codegen as cg
+import esphome.config_validation as cv
 from esphome.components.packet_transport import (
     PacketTransport,
     new_packet_transport,
     transport_schema,
 )
-import esphome.config_validation as cv
 from esphome.cpp_generator import MockObj
 from esphome.types import ConfigType
 

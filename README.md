@@ -63,19 +63,21 @@ Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
 
 ## Scope / roadmap
 
-- v1: LoRa only (`modulation: LORA`, SF 7–12). Anything else fails validation
-  with a clear error. FSK/GFSK/MSK/GMSK share the scaffolding and can follow.
-- SF6 implicit-header mode: rejected for now (same reason).
+- LoRa (`modulation: LORA`, SF 7–12) and FSK (`modulation: FSK`) are
+  supported. Anything else (GFSK/MSK/GMSK labels, SF6 implicit-header mode)
+  fails validation with a clear error.
 - `packet_transport` platform: shipped
   (`packet_transport/sx126x_radiolib`, mirrors the core platform).
-  See `examples/packet_transport.yaml`.
+  Validated live with LoRa; FSK transport is untested.
 - No `run_image_cal` action (RadioLib handles image calibration during `begin()`).
+- No `preamble_detect` knob (RadioLib derives the FSK preamble detector
+  length automatically in `beginFSK`).
 
 ## Develop / test (uv)
 
 ```sh
-uv sync --group dev        # ESPHome 2026.7.0 + pytest
-uv run pytest              # schema unit tests + example validation via `esphome config`
+uv sync --group dev        # ESPHome 2026.10.2 + pytest + ruff
+uv run pytest              # schema unit tests + example validation/codegen via `esphome`
 ```
 
 `tests/test_examples.py` shells out to `esphome config` on every file in

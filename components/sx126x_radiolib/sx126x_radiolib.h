@@ -38,8 +38,20 @@ class SX126xRadioLib final : public Component {
     this->has_txen_pin_ = true;
   }
   void set_bandwidth(float bandwidth_khz) { this->bandwidth_khz_ = bandwidth_khz; }
+  void set_fsk_mode(bool fsk_mode) { this->fsk_mode_ = fsk_mode; }
   void set_coding_rate(uint8_t coding_rate) { this->coding_rate_ = coding_rate; }
   void set_crc_enable(bool crc_enable) { this->crc_enable_ = crc_enable; }
+  void set_bitrate(uint32_t bitrate_bps) { this->bitrate_bps_ = bitrate_bps; }
+  void set_deviation_hz(uint32_t deviation_hz) { this->deviation_hz_ = deviation_hz; }
+  void set_shaping(uint8_t shaping) { this->shaping_ = shaping; }
+  void set_crc_size(uint8_t crc_size) { this->crc_size_ = crc_size; }
+  void set_crc_inverted(bool crc_inverted) { this->crc_inverted_ = crc_inverted; }
+  void set_crc_polynomial(uint16_t crc_polynomial) { this->crc_polynomial_ = crc_polynomial; }
+  void set_crc_initial(uint16_t crc_initial) { this->crc_initial_ = crc_initial; }
+  void set_whitening_enable(bool whitening_enable) { this->whitening_enable_ = whitening_enable; }
+  void set_whitening_initial(uint16_t whitening_initial) {
+    this->whitening_initial_ = whitening_initial;
+  }
   void set_frequency(uint32_t frequency) { this->frequency_ = frequency; }
   void set_hw_version(const std::string &hw_version) { this->hw_version_ = hw_version; }
   void set_pa_power(int8_t power) { this->pa_power_ = power; }
@@ -92,16 +104,26 @@ class SX126xRadioLib final : public Component {
   float bandwidth_khz_{125.0};
   uint32_t frequency_{868000000};
   uint32_t tcxo_delay_us_{5000};
+  uint32_t bitrate_bps_{4800};
+  uint32_t deviation_hz_{5000};
   uint16_t preamble_size_{8};
+  uint16_t crc_polynomial_{0x1021};
+  uint16_t crc_initial_{0x1D0F};
+  uint16_t whitening_initial_{0x0100};
   float tcxo_voltage_{0.0f};
   uint8_t coding_rate_{5};
   uint8_t spreading_factor_{9};
   uint8_t payload_length_{0};
   uint8_t pa_ramp_{0x03};
+  uint8_t shaping_{0x00};
+  uint8_t crc_size_{2};
   int8_t pa_power_{14};
   bool rx_start_{true};
   bool rf_switch_{true};
   bool crc_enable_{true};
+  bool crc_inverted_{true};
+  bool whitening_enable_{false};
+  bool fsk_mode_{false};
   bool rx_active_{false};
 };
 

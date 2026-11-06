@@ -29,6 +29,15 @@ CONF_HW_VERSION = "hw_version"
 CONF_MODULATION = "modulation"
 CONF_PA_POWER = "pa_power"
 CONF_PA_RAMP = "pa_ramp"
+CONF_BITRATE = "bitrate"
+CONF_DEVIATION = "deviation"
+CONF_SHAPING = "shaping"
+CONF_CRC_SIZE = "crc_size"
+CONF_CRC_INVERTED = "crc_inverted"
+CONF_CRC_POLYNOMIAL = "crc_polynomial"
+CONF_CRC_INITIAL = "crc_initial"
+CONF_WHITENING_ENABLE = "whitening_enable"
+CONF_WHITENING_INITIAL = "whitening_initial"
 CONF_PREAMBLE_SIZE = "preamble_size"
 CONF_SPREADING_FACTOR = "spreading_factor"
 CONF_SYNC_VALUE = "sync_value"
@@ -41,8 +50,8 @@ CONF_PAYLOAD_LENGTH = "payload_length"
 sx126x_radiolib_ns = cg.esphome_ns.namespace("sx126x_radiolib")
 SX126xRadioLib = sx126x_radiolib_ns.class_("SX126xRadioLib", cg.Component)
 
-# LoRa bandwidths only (FSK is not implemented yet, see validate_config).
-BW_KHZ = {
+# LoRa-only bandwidths (kHz). FSK uses FSK_BW_KHZ below.
+LORA_BW_KHZ = {
     "7_8kHz": 7.8,
     "10_4kHz": 10.4,
     "15_6kHz": 15.6,
@@ -54,6 +63,33 @@ BW_KHZ = {
     "250_0kHz": 250.0,
     "500_0kHz": 500.0,
 }
+
+# FSK-only bandwidths (kHz) - the SX126x discrete Rx bandwidths.
+FSK_BW_KHZ = {
+    "4_8kHz": 4.8,
+    "5_8kHz": 5.8,
+    "7_3kHz": 7.3,
+    "9_7kHz": 9.7,
+    "11_7kHz": 11.7,
+    "14_6kHz": 14.6,
+    "19_5kHz": 19.5,
+    "23_4kHz": 23.4,
+    "29_3kHz": 29.3,
+    "39_0kHz": 39.0,
+    "46_9kHz": 46.9,
+    "58_6kHz": 58.6,
+    "78_2kHz": 78.2,
+    "93_8kHz": 93.8,
+    "117_3kHz": 117.3,
+    "156_2kHz": 156.2,
+    "187_2kHz": 187.2,
+    "234_3kHz": 234.3,
+    "312_0kHz": 312.0,
+    "373_6kHz": 373.6,
+    "467_0kHz": 467.0,
+}
+
+BW_KHZ = {**LORA_BW_KHZ, **FSK_BW_KHZ}
 
 CODING_RATE = {
     "CR_4_5": 5,
@@ -72,6 +108,14 @@ RAMP = {
     "800us": 0x09,
     "1700us": 0x0A,
     "3400us": 0x0B,
+}
+
+SHAPING = {
+    "GAUSSIAN_BT_0_3": 0x01,
+    "GAUSSIAN_BT_0_5": 0x02,
+    "GAUSSIAN_BT_0_7": 0x03,
+    "GAUSSIAN_BT_1_0": 0x04,
+    "NONE": 0x00,
 }
 
 TCXO_VOLTAGE = {
@@ -112,13 +156,59 @@ def validate_raw_data(value: Any) -> bytes | list[int]:
 
 
 def validate_config(config: ConfigType) -> ConfigType:
-    if config[CONF_PREAMBLE_SIZE] < 6:
-        raise cv.Invalid("Minimum 'preamble_size' is 6 with LORA")
-    if config[CONF_SPREADING_FACTOR] < 7:
-        raise cv.Invalid("Spreading factor 6 (implicit header mode) is not supported yet, use 7-12")
-    if len(config[CONF_SYNC_VALUE]) > 2:
-        raise cv.Invalid("'sync_value' takes at most 2 bytes with LORA")
+    is_fsk = config[CONF_MODULATION] == "FSK"
+    bw = config[CONF_BANDWIDTH]
+    if is_fsk:
+        if bw not in FSK_BW_KHZ:
+            raise cv.Invalid(f"{bw} is a LoRa bandwidth, pick one of the FSK bandwidths for FSK")
+        if config[CONF_PREAMBLE_SIZE] < 1:
+            raise cv.Invalid("Minimum 'preamble_size' is 1 with FSK")
+        if len(config[CONF_SYNC_VALUE]) > 8:
+            raise cv.Invalid("'sync_value' takes at most 8 bytes with FSK")
+        if config[CONF_SPREADING_FACTOR] != 9:
+            raise cv.Invalid("'spreading_factor' is LoRa-only")
+        if config[CONF_CODING_RATE] != "CR_4_5":
+            raise cv.Invalid("'coding_rate' is LoRa-only")
+    else:
+        if bw not in LORA_BW_KHZ:
+            raise cv.Invalid(f"{bw} is an FSK bandwidth, pick one of the LoRa bandwidths for LORA")
+        if config[CONF_PREAMBLE_SIZE] < 6:
+            raise cv.Invalid("Minimum 'preamble_size' is 6 with LORA")
+        if config[CONF_SPREADING_FACTOR] < 7:
+            raise cv.Invalid(
+                "Spreading factor 6 (implicit header mode) is not supported yet, use 7-12"
+            )
+        if len(config[CONF_SYNC_VALUE]) > 2:
+            raise cv.Invalid("'sync_value' takes at most 2 bytes with LORA")
+        if config[CONF_PAYLOAD_LENGTH] != 0:
+            raise cv.Invalid("'payload_length' is FSK-only (LoRa always uses explicit header mode)")
+        for key in (
+            CONF_BITRATE,
+            CONF_DEVIATION,
+            CONF_SHAPING,
+            CONF_CRC_SIZE,
+            CONF_CRC_INVERTED,
+            CONF_CRC_POLYNOMIAL,
+            CONF_CRC_INITIAL,
+            CONF_WHITENING_ENABLE,
+            CONF_WHITENING_INITIAL,
+        ):
+            if config[key] != FSK_DEFAULTS[key]:
+                raise cv.Invalid(f"'{key}' is FSK-only")
     return config
+
+
+FSK_DEFAULTS = {
+    CONF_BITRATE: 4800,
+    CONF_DEVIATION: 5000,
+    CONF_SHAPING: "NONE",
+    CONF_CRC_SIZE: 2,
+    CONF_CRC_INVERTED: True,
+    CONF_CRC_POLYNOMIAL: 0x1021,
+    CONF_CRC_INITIAL: 0x1D0F,
+    CONF_WHITENING_ENABLE: False,
+    CONF_WHITENING_INITIAL: 0x0100,
+}
 
 
 CONFIG_SCHEMA = (
@@ -143,11 +233,28 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_HW_VERSION): cv.one_of(
                 "sx1261", "sx1262", "sx1268", "llcc68", lower=True
             ),
-            cv.Required(CONF_MODULATION): cv.one_of("LORA", upper=True),
+            cv.Required(CONF_MODULATION): cv.one_of("LORA", "FSK", upper=True),
             cv.Optional(CONF_ON_PACKET): automation.validate_automation(single=True),
             cv.Optional(CONF_BANDWIDTH, default="125_0kHz"): cv.enum(BW_KHZ),
             cv.Optional(CONF_CODING_RATE, default="CR_4_5"): cv.enum(CODING_RATE),
             cv.Optional(CONF_CRC_ENABLE, default=True): cv.boolean,
+            cv.Optional(CONF_BITRATE, default=4800): cv.int_range(min=600, max=300000),
+            cv.Optional(CONF_DEVIATION, default="5kHz"): cv.All(
+                cv.frequency, cv.int_range(min=0, max=100000)
+            ),
+            cv.Optional(CONF_SHAPING, default="NONE"): cv.enum(SHAPING),
+            cv.Optional(CONF_CRC_SIZE, default=2): cv.int_range(min=1, max=2),
+            cv.Optional(CONF_CRC_INVERTED, default=True): cv.boolean,
+            cv.Optional(CONF_CRC_POLYNOMIAL, default=0x1021): cv.All(
+                cv.hex_int, cv.Range(min=0, max=0xFFFF)
+            ),
+            cv.Optional(CONF_CRC_INITIAL, default=0x1D0F): cv.All(
+                cv.hex_int, cv.Range(min=0, max=0xFFFF)
+            ),
+            cv.Optional(CONF_WHITENING_ENABLE, default=False): cv.boolean,
+            cv.Optional(CONF_WHITENING_INITIAL, default=0x0100): cv.All(
+                cv.hex_int, cv.Range(min=0, max=0x1FF)
+            ),
             cv.Optional(CONF_PA_POWER, default=14): cv.int_range(min=-3, max=22),
             cv.Optional(CONF_PA_RAMP, default="40us"): cv.enum(RAMP),
             cv.Optional(CONF_PAYLOAD_LENGTH, default=0): cv.int_range(min=0, max=255),
@@ -199,8 +306,18 @@ async def to_code(config: ConfigType) -> None:
     if CONF_TXEN_PIN in config:
         cg.add(var.set_txen_pin(config[CONF_TXEN_PIN]["number"]))
     cg.add(var.set_bandwidth(config[CONF_BANDWIDTH]))
+    cg.add(var.set_fsk_mode(config[CONF_MODULATION] == "FSK"))
     cg.add(var.set_coding_rate(config[CONF_CODING_RATE]))
     cg.add(var.set_crc_enable(config[CONF_CRC_ENABLE]))
+    cg.add(var.set_bitrate(config[CONF_BITRATE]))
+    cg.add(var.set_deviation_hz(config[CONF_DEVIATION]))
+    cg.add(var.set_shaping(config[CONF_SHAPING]))
+    cg.add(var.set_crc_size(config[CONF_CRC_SIZE]))
+    cg.add(var.set_crc_inverted(config[CONF_CRC_INVERTED]))
+    cg.add(var.set_crc_polynomial(config[CONF_CRC_POLYNOMIAL]))
+    cg.add(var.set_crc_initial(config[CONF_CRC_INITIAL]))
+    cg.add(var.set_whitening_enable(config[CONF_WHITENING_ENABLE]))
+    cg.add(var.set_whitening_initial(config[CONF_WHITENING_INITIAL]))
     cg.add(var.set_frequency(config[CONF_FREQUENCY]))
     cg.add(var.set_hw_version(config[CONF_HW_VERSION]))
     cg.add(var.set_pa_power(config[CONF_PA_POWER]))

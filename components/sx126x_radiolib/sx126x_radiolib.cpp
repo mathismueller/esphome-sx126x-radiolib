@@ -27,7 +27,16 @@ void SX126xRadioLib::setup() {
   uint32_t txen = this->has_txen_pin_ ? this->txen_pin_ : RADIOLIB_NC;
   this->radio_->setRfSwitchPins(rxen, txen);
 
-  int16_t state = this->radio_->begin(this->frequency_ / 1e6);
+  int16_t state;
+  if (this->fsk_mode_) {
+    // NOTE: SX1262::beginFSK takes frequency FIRST (unlike the base-class
+    // order) - passing bitrate here silently tunes 4.8 MHz and fails.
+    state = this->radio_->beginFSK(this->frequency_ / 1e6, this->bitrate_bps_ / 1000.0f,
+                                   this->deviation_hz_ / 1000.0f, this->bandwidth_khz_,
+                                   this->pa_power_, this->preamble_size_);
+  } else {
+    state = this->radio_->begin(this->frequency_ / 1e6);
+  }
   if (state != RADIOLIB_ERR_NONE) {
     ESP_LOGE(TAG, "radio.begin() failed, code %d", state);
     this->mark_failed();
@@ -42,19 +51,41 @@ void SX126xRadioLib::setup() {
     }
   }
   this->radio_->setFrequency(this->frequency_ / 1e6);
-  this->radio_->setBandwidth(this->bandwidth_khz_);
-  this->radio_->setSpreadingFactor(this->spreading_factor_);
-  this->radio_->setCodingRate(this->coding_rate_);
-  if (this->sync_value_.size() == 1) {
-    this->radio_->setSyncWord(this->sync_value_[0]);
+  if (this->fsk_mode_) {
+    this->radio_->setBandwidth(this->bandwidth_khz_);
+    if (this->sync_value_.size() == 1) {
+      this->radio_->setSyncWord(this->sync_value_[0]);
+    } else {
+      this->radio_->setSyncWord(this->sync_value_.data(), this->sync_value_.size());
+    }
+    this->radio_->setDataShaping(this->shaping_);
+    this->radio_->setWhitening(this->whitening_enable_, this->whitening_initial_);
+    if (this->crc_enable_) {
+      this->radio_->setCRC(this->crc_size_, this->crc_initial_, this->crc_polynomial_,
+                            this->crc_inverted_);
+    } else {
+      this->radio_->setCRC(0);
+    }
+    if (this->payload_length_ > 0) {
+      this->radio_->fixedPacketLengthMode(this->payload_length_);
+    } else {
+      this->radio_->variablePacketLengthMode();
+    }
   } else {
-    this->radio_->setSyncWord(this->sync_value_.data(), this->sync_value_.size());
+    this->radio_->setBandwidth(this->bandwidth_khz_);
+    this->radio_->setSpreadingFactor(this->spreading_factor_);
+    this->radio_->setCodingRate(this->coding_rate_);
+    if (this->sync_value_.size() == 1) {
+      this->radio_->setSyncWord(this->sync_value_[0]);
+    } else {
+      this->radio_->setSyncWord(this->sync_value_.data(), this->sync_value_.size());
+    }
+    // LoRa CRC: length 2 = on, 0 = off.
+    this->radio_->setCRC(this->crc_enable_ ? 2 : 0);
   }
   this->radio_->setPreambleLength(this->preamble_size_);
   this->radio_->setOutputPower(this->pa_power_);
   this->radio_->setPaRampTime(this->pa_ramp_);
-  // LoRa CRC: length 2 = on, 0 = off.
-  this->radio_->setCRC(this->crc_enable_ ? 2 : 0);
   this->radio_->setDio2AsRfSwitch(this->rf_switch_);
 
   // DIO1 interrupt latches on packet arrival; loop() drains it.
@@ -164,8 +195,14 @@ void SX126xRadioLib::dump_config() {
   ESP_LOGCONFIG(TAG, "  DIO1=%d BUSY=%d RST=%d", this->dio1_pin_, this->busy_pin_, this->rst_pin_);
   ESP_LOGCONFIG(TAG, "  RXEN pin=%d TXEN pin=%d DIO2-switch=%s", this->has_rxen_pin_ ? (int) this->rxen_pin_ : -1,
                 this->has_txen_pin_ ? (int) this->txen_pin_ : -1, this->rf_switch_ ? "yes" : "no");
-  ESP_LOGCONFIG(TAG, "  freq=%.3f MHz BW=%.1f kHz SF=%d CR=4/%d", this->frequency_ / 1e6,
-                this->bandwidth_khz_, this->spreading_factor_, this->coding_rate_);
+  ESP_LOGCONFIG(TAG, "  freq=%.3f MHz BW=%.1f kHz mode=%s SF=%d CR=4/%d", this->frequency_ / 1e6,
+                this->bandwidth_khz_, this->fsk_mode_ ? "FSK" : "LORA", this->spreading_factor_,
+                this->coding_rate_);
+  if (this->fsk_mode_) {
+    ESP_LOGCONFIG(TAG, "  bitrate=%u bps deviation=%u Hz shaping=0x%02X CRC len=%d whitening=%s",
+                  (unsigned) this->bitrate_bps_, (unsigned) this->deviation_hz_, this->shaping_,
+                  this->crc_enable_ ? this->crc_size_ : 0, this->whitening_enable_ ? "on" : "off");
+  }
   ESP_LOGCONFIG(TAG, "  preamble=%d power=%d dBm crc=%s tcxo=%.1f V", this->preamble_size_,
                 this->pa_power_, this->crc_enable_ ? "on" : "off", this->tcxo_voltage_);
 }

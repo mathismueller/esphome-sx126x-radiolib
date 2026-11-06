@@ -64,21 +64,15 @@ def test_full_valid_with_rxen(comp):
     assert validated["tcxo_voltage"].enum_value == 1.8
 
 
-def test_fsk_rejected(comp):
-    # Modulation is enum-restricted to LORA; FSK/GFSK ride the roadmap.
-    with pytest.raises(cv.Invalid, match="Unknown value 'FSK'"):
+def test_fsk_rejected_without_fsk_bandwidth(comp):
+    # FSK is valid, but the LoRa-default bandwidth is not usable with it.
+    with pytest.raises(cv.Invalid, match="LoRa bandwidth"):
         comp.CONFIG_SCHEMA(minimal_config(modulation="FSK"))
 
 
 def test_sf6_rejected(comp):
     with pytest.raises(cv.Invalid, match="Spreading factor 6"):
         comp.CONFIG_SCHEMA(minimal_config(spreading_factor=6))
-
-
-def test_fsk_bandwidth_rejected_for_lora(comp):
-    # FSK-only bandwidths are not enum members at all (LoRa-only component).
-    with pytest.raises(cv.Invalid, match="Unknown value '78_2kHz'"):
-        comp.CONFIG_SCHEMA(minimal_config(bandwidth="78_2kHz"))
 
 
 def test_preamble_too_short_rejected(comp):
@@ -103,3 +97,51 @@ def test_validate_raw_data(comp):
     assert comp.validate_raw_data([0x01, 0xFF]) == [0x01, 0xFF]
     with pytest.raises(cv.Invalid, match="string wrapped in quotes"):
         comp.validate_raw_data(12345)
+
+
+def fsk_config(**overrides):
+    cfg = minimal_config(
+        modulation="FSK",
+        bandwidth="78_2kHz",
+        sync_value=[0x33, 0x33],
+    )
+    cfg.update(overrides)
+    return cfg
+
+
+def test_fsk_minimal_valid(comp):
+    validated = comp.CONFIG_SCHEMA(fsk_config())
+    assert validated["bandwidth"] == "78_2kHz"
+    assert validated["bandwidth"].enum_value == 78.2
+    assert validated["bitrate"] == 4800
+    assert validated["shaping"] == "NONE"
+
+
+def test_fsk_rejects_lora_bandwidth(comp):
+    with pytest.raises(cv.Invalid, match="LoRa bandwidth"):
+        comp.CONFIG_SCHEMA(fsk_config(bandwidth="125_0kHz"))
+
+
+def test_lora_rejects_fsk_bandwidth(comp):
+    with pytest.raises(cv.Invalid, match="FSK bandwidth"):
+        comp.CONFIG_SCHEMA(minimal_config(bandwidth="78_2kHz"))
+
+
+def test_lora_rejects_fsk_only_option(comp):
+    with pytest.raises(cv.Invalid, match="'bitrate' is FSK-only"):
+        comp.CONFIG_SCHEMA(minimal_config(bitrate=9600))
+
+
+def test_lora_rejects_payload_length(comp):
+    with pytest.raises(cv.Invalid, match="'payload_length' is FSK-only"):
+        comp.CONFIG_SCHEMA(minimal_config(payload_length=8))
+
+
+def test_fsk_rejects_long_sync(comp):
+    with pytest.raises(cv.Invalid, match="at most 8 bytes"):
+        comp.CONFIG_SCHEMA(fsk_config(sync_value=[0x11] * 9))
+
+
+def test_fsk_rejects_spreading_factor(comp):
+    with pytest.raises(cv.Invalid, match="'spreading_factor' is LoRa-only"):
+        comp.CONFIG_SCHEMA(fsk_config(spreading_factor=7))

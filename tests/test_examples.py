@@ -28,12 +28,16 @@ def run_esphome(args, cwd):
     )
 
 
+GITHUB_SOURCE = "source: github://mathismueller/esphome-sx126x-radiolib@main"
+
+
 def stage_example(example, tmp_path):
-    """Copy the example next to an absolute external_components path."""
+    """Point the example at the local checkout for hermetic validation."""
     text = example.read_text()
-    assert "../components" in text, "example must reference ../components"
+    assert GITHUB_SOURCE in text, f"{example.name} must reference the github source"
+    local_source = f"source:\n      type: local\n      path: {COMPONENTS_DIR}"
     staged = tmp_path / example.name
-    staged.write_text(text.replace("../components", str(COMPONENTS_DIR)))
+    staged.write_text(text.replace(GITHUB_SOURCE, local_source))
     return staged
 
 

@@ -20,9 +20,12 @@ wifi:
     ssid: "LoRa Receiver"
 
 external_components:
-  - source:
-      type: local
-      path: ../components
+  # Release source. For local development against a clone, use:
+  #   - source:
+  #       type: local
+  #       path: ../components
+  #     components: [sx126x_radiolib]
+  - source: github://mathismueller/esphome-sx126x-radiolib@main
     components: [sx126x_radiolib]
 
 sx126x_radiolib:

@@ -165,7 +165,7 @@ void SX126xRadioLib::dump_config() {
   ESP_LOGCONFIG(TAG, "  RXEN pin=%d TXEN pin=%d DIO2-switch=%s", this->has_rxen_pin_ ? (int) this->rxen_pin_ : -1,
                 this->has_txen_pin_ ? (int) this->txen_pin_ : -1, this->rf_switch_ ? "yes" : "no");
   ESP_LOGCONFIG(TAG, "  freq=%.3f MHz BW=%.1f kHz SF=%d CR=4/%d", this->frequency_ / 1e6,
-                this->bandwidth_khz_, this->spreading_factor_, this->coding_rate_ - 4);
+                this->bandwidth_khz_, this->spreading_factor_, this->coding_rate_);
   ESP_LOGCONFIG(TAG, "  preamble=%d power=%d dBm crc=%s tcxo=%.1f V", this->preamble_size_,
                 this->pa_power_, this->crc_enable_ ? "on" : "off", this->tcxo_voltage_);
 }

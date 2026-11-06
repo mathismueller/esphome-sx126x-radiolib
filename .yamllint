@@ -1,0 +1,10 @@
+# yamllint config for example YAMLs (pragmatic subset of upstream defaults).
+extends: default
+
+rules:
+  document-start: disable
+  line-length:
+    max: 160
+  truthy:
+    allowed-values: ["true", "false", "on"]
+    check-keys: false

@@ -49,9 +49,7 @@ class SX126xRadioLib final : public Component {
   void set_crc_polynomial(uint16_t crc_polynomial) { this->crc_polynomial_ = crc_polynomial; }
   void set_crc_initial(uint16_t crc_initial) { this->crc_initial_ = crc_initial; }
   void set_whitening_enable(bool whitening_enable) { this->whitening_enable_ = whitening_enable; }
-  void set_whitening_initial(uint16_t whitening_initial) {
-    this->whitening_initial_ = whitening_initial;
-  }
+  void set_whitening_initial(uint16_t whitening_initial) { this->whitening_initial_ = whitening_initial; }
   void set_frequency(uint32_t frequency) { this->frequency_ = frequency; }
   void set_hw_version(const std::string &hw_version) { this->hw_version_ = hw_version; }
   void set_pa_power(int8_t power) { this->pa_power_ = power; }

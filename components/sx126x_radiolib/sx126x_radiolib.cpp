@@ -9,17 +9,14 @@ namespace esphome::sx126x_radiolib {
 
 static const char *const TAG = "sx126x_radiolib";
 
-void IRAM_ATTR SX126xRadioLib::gpio_intr(void *arg) {
-  static_cast<SX126xRadioLib *>(arg)->dio1_flag_ = true;
-}
+void IRAM_ATTR SX126xRadioLib::gpio_intr(void *arg) { static_cast<SX126xRadioLib *>(arg)->dio1_flag_ = true; }
 
 void SX126xRadioLib::setup() {
   ESP_LOGCONFIG(TAG, "Setting up SX126x via RadioLib...");
 
   SPI.begin(this->sck_pin_, this->miso_pin_, this->mosi_pin_, this->cs_pin_);
 
-  this->radio_ = new SX1262(new Module(this->cs_pin_, this->dio1_pin_, this->rst_pin_,
-                                       this->busy_pin_));
+  this->radio_ = new SX1262(new Module(this->cs_pin_, this->dio1_pin_, this->rst_pin_, this->busy_pin_));
 
   // MCU-driven antenna switch pins (e.g. Wio-SX1262 header board RF_SW).
   // RadioLib drives these automatically on every TX/RX/standby transition.
@@ -31,9 +28,8 @@ void SX126xRadioLib::setup() {
   if (this->fsk_mode_) {
     // NOTE: SX1262::beginFSK takes frequency FIRST (unlike the base-class
     // order) - passing bitrate here silently tunes 4.8 MHz and fails.
-    state = this->radio_->beginFSK(this->frequency_ / 1e6, this->bitrate_bps_ / 1000.0f,
-                                   this->deviation_hz_ / 1000.0f, this->bandwidth_khz_,
-                                   this->pa_power_, this->preamble_size_);
+    state = this->radio_->beginFSK(this->frequency_ / 1e6, this->bitrate_bps_ / 1000.0f, this->deviation_hz_ / 1000.0f,
+                                   this->bandwidth_khz_, this->pa_power_, this->preamble_size_);
   } else {
     state = this->radio_->begin(this->frequency_ / 1e6);
   }
@@ -61,8 +57,7 @@ void SX126xRadioLib::setup() {
     this->radio_->setDataShaping(this->shaping_);
     this->radio_->setWhitening(this->whitening_enable_, this->whitening_initial_);
     if (this->crc_enable_) {
-      this->radio_->setCRC(this->crc_size_, this->crc_initial_, this->crc_polynomial_,
-                            this->crc_inverted_);
+      this->radio_->setCRC(this->crc_size_, this->crc_initial_, this->crc_polynomial_, this->crc_inverted_);
     } else {
       this->radio_->setCRC(0);
     }
@@ -190,21 +185,20 @@ void SX126xRadioLib::set_mode_sleep() {
 
 void SX126xRadioLib::dump_config() {
   ESP_LOGCONFIG(TAG, "SX126x via RadioLib:");
-  ESP_LOGCONFIG(TAG, "  NSS=%d SCK=%d MOSI=%d MISO=%d", this->cs_pin_, this->sck_pin_,
-                this->mosi_pin_, this->miso_pin_);
+  ESP_LOGCONFIG(TAG, "  NSS=%d SCK=%d MOSI=%d MISO=%d", this->cs_pin_, this->sck_pin_, this->mosi_pin_,
+                this->miso_pin_);
   ESP_LOGCONFIG(TAG, "  DIO1=%d BUSY=%d RST=%d", this->dio1_pin_, this->busy_pin_, this->rst_pin_);
   ESP_LOGCONFIG(TAG, "  RXEN pin=%d TXEN pin=%d DIO2-switch=%s", this->has_rxen_pin_ ? (int) this->rxen_pin_ : -1,
                 this->has_txen_pin_ ? (int) this->txen_pin_ : -1, this->rf_switch_ ? "yes" : "no");
-  ESP_LOGCONFIG(TAG, "  freq=%.3f MHz BW=%.1f kHz mode=%s SF=%d CR=4/%d", this->frequency_ / 1e6,
-                this->bandwidth_khz_, this->fsk_mode_ ? "FSK" : "LORA", this->spreading_factor_,
-                this->coding_rate_);
+  ESP_LOGCONFIG(TAG, "  freq=%.3f MHz BW=%.1f kHz mode=%s SF=%d CR=4/%d", this->frequency_ / 1e6, this->bandwidth_khz_,
+                this->fsk_mode_ ? "FSK" : "LORA", this->spreading_factor_, this->coding_rate_);
   if (this->fsk_mode_) {
     ESP_LOGCONFIG(TAG, "  bitrate=%u bps deviation=%u Hz shaping=0x%02X CRC len=%d whitening=%s",
                   (unsigned) this->bitrate_bps_, (unsigned) this->deviation_hz_, this->shaping_,
                   this->crc_enable_ ? this->crc_size_ : 0, this->whitening_enable_ ? "on" : "off");
   }
-  ESP_LOGCONFIG(TAG, "  preamble=%d power=%d dBm crc=%s tcxo=%.1f V", this->preamble_size_,
-                this->pa_power_, this->crc_enable_ ? "on" : "off", this->tcxo_voltage_);
+  ESP_LOGCONFIG(TAG, "  preamble=%d power=%d dBm crc=%s tcxo=%.1f V", this->preamble_size_, this->pa_power_,
+                this->crc_enable_ ? "on" : "off", this->tcxo_voltage_);
 }
 
 }  // namespace esphome::sx126x_radiolib

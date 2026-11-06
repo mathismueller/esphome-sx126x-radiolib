@@ -76,8 +76,9 @@ Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
 ## Develop / test (uv)
 
 ```sh
-uv sync --group dev        # ESPHome 2026.10.2 + pytest + ruff
-uv run pytest              # schema unit tests + example validation/codegen via `esphome`
+uv sync --group dev        # ESPHome 2026.10.2 + pytest + ruff + yamllint + clang-format
+uv run pytest              # fast suite: schema, esphome config/codegen, lint
+uv run pytest -m slow      # opt-in full firmware compile (toolchains + network)
 ```
 
 `tests/test_examples.py` shells out to `esphome config` on every file in

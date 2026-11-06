@@ -6,8 +6,7 @@
 
 namespace esphome::sx126x_radiolib {
 
-template<typename... Ts>
-class SendPacketAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
+template<typename... Ts> class SendPacketAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
  public:
   void set_data_template(std::vector<uint8_t> (*func)(Ts...)) {
     this->data_.func = func;
@@ -39,26 +38,22 @@ class SendPacketAction final : public Action<Ts...>, public Parented<SX126xRadio
   } data_;
 };
 
-template<typename... Ts>
-class SetModeTxAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
+template<typename... Ts> class SetModeTxAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
  public:
   void play(const Ts &...x) override { this->parent_->set_mode_tx(); }
 };
 
-template<typename... Ts>
-class SetModeRxAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
+template<typename... Ts> class SetModeRxAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
  public:
   void play(const Ts &...x) override { this->parent_->set_mode_rx(); }
 };
 
-template<typename... Ts>
-class SetModeSleepAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
+template<typename... Ts> class SetModeSleepAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
  public:
   void play(const Ts &...x) override { this->parent_->set_mode_sleep(); }
 };
 
-template<typename... Ts>
-class SetModeStandbyAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
+template<typename... Ts> class SetModeStandbyAction final : public Action<Ts...>, public Parented<SX126xRadioLib> {
  public:
   void play(const Ts &...x) override { this->parent_->set_mode_standby(); }
 };

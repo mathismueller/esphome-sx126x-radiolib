@@ -8,13 +8,19 @@ dependencies = []
 
 [dependency-groups]
 dev = [
+    "clang-format>=18",
     "esphome==2026.10.2",
     "pytest>=8.0",
     "ruff>=0.14",
+    "yamllint>=1.37",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not slow'"
+markers = [
+    "slow: full firmware compile, needs toolchains + network (opt-in via -m slow)",
+]
 
 [tool.ruff]
 line-length = 100

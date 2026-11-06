@@ -9,8 +9,8 @@
 namespace esphome::sx126x_radiolib {
 
 class SX126xRadioLibTransport final : public packet_transport::PacketTransport,
-                                       public Parented<SX126xRadioLib>,
-                                       public SX126xRadioLibListener {
+                                      public Parented<SX126xRadioLib>,
+                                      public SX126xRadioLibListener {
  public:
   void setup() override;
   void on_packet(const std::vector<uint8_t> &packet, float rssi, float snr) override;

@@ -14,7 +14,6 @@ CODEOWNERS = ["@mathis"]
 DEPENDENCIES: list[str] = []
 
 CONF_SX126X_RADIOLIB_ID = "sx126x_radiolib_id"
-
 CONF_BANDWIDTH = "bandwidth"
 CONF_CODING_RATE = "coding_rate"
 CONF_CS_PIN = "cs_pin"

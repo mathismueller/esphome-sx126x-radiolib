@@ -92,6 +92,9 @@ void SX126xRadioLib::handle_rx_() {
     float snr = this->radio_->getSNR();
     ESP_LOGD(TAG, "packet received, len=%u rssi=%.1f snr=%.1f", (unsigned) len, rssi, snr);
     this->packet_trigger_.trigger(packet, rssi, snr);
+    for (auto *listener : this->listeners_) {
+      listener->on_packet(packet, rssi, snr);
+    }
   } else if (state == RADIOLIB_ERR_CRC_MISMATCH) {
     ESP_LOGD(TAG, "packet CRC mismatch, dropped");
   } else if (state != RADIOLIB_ERR_RX_TIMEOUT) {

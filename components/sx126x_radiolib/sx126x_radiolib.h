@@ -10,6 +10,11 @@
 
 namespace esphome::sx126x_radiolib {
 
+class SX126xRadioLibListener {
+ public:
+  virtual void on_packet(const std::vector<uint8_t> &packet, float rssi, float snr) = 0;
+};
+
 class SX126xRadioLib final : public Component {
  public:
   float get_setup_priority() const override { return setup_priority::PROCESSOR; }
@@ -55,6 +60,8 @@ class SX126xRadioLib final : public Component {
   int transmit_packet(const std::vector<uint8_t> &packet);
 
   Trigger<std::vector<uint8_t>, float, float> *get_packet_trigger() { return &this->packet_trigger_; }
+  void register_listener(SX126xRadioLibListener *listener) { this->listeners_.push_back(listener); }
+  size_t get_max_packet_size() { return RADIOLIB_SX126X_MAX_PACKET_LENGTH; }
 
  protected:
   static void IRAM_ATTR gpio_intr(void *arg);
@@ -62,6 +69,7 @@ class SX126xRadioLib final : public Component {
   void handle_rx_();
 
   Trigger<std::vector<uint8_t>, float, float> packet_trigger_;
+  std::vector<SX126xRadioLibListener *> listeners_;
 
   // Raw GPIO numbers: RadioLib drives the pins itself through Arduino APIs.
   uint8_t cs_pin_{0};

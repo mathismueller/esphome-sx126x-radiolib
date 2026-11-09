@@ -73,7 +73,8 @@ Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
   fails validation with a clear error.
 - `packet_transport` platform: shipped
   (`packet_transport/sx126x_radiolib`, mirrors the core platform).
-  Validated live with LoRa; FSK transport is untested.
+  Validated live S3↔C6 with both LoRa and FSK (shared-counter receipt
+  logged on the C6).
 - No `run_image_cal` action (RadioLib handles image calibration during `begin()`).
 - No `preamble_detect` knob (RadioLib derives the FSK preamble detector
   length automatically in `beginFSK`).

@@ -81,8 +81,7 @@ class SX126xRadioLib final : public Component {
   Trigger<std::vector<uint8_t>, float, float> packet_trigger_;
   std::vector<SX126xRadioLibListener *> listeners_;
 
-  // Raw GPIO numbers: Arduino HAL drives the pins itself; IDF HAL (EspHal)
-  // is constructed from the same numbers in setup().
+  // Raw GPIO numbers: EspHal is constructed from the same numbers in setup().
   uint8_t cs_pin_{0};
   uint8_t sck_pin_{0};
   uint8_t mosi_pin_{0};

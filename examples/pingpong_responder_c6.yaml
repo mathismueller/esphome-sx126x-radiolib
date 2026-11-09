@@ -1,4 +1,4 @@
-# PingPong responder (IDF): XIAO ESP32C6 + Wio-SX1262 V1.0, replies PONG to PING.
+# PingPong responder: XIAO ESP32C6 + Wio-SX1262 V1.0, replies PONG to PING.
 # Same D-label stacking as S3, translated to C6 GPIOs.
 esphome:
   name: lora-pong-idf

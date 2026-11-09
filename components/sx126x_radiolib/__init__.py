@@ -272,29 +272,16 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config: ConfigType) -> None:
-    from esphome.core import CORE
+    # IDF-only: RadioLib's native EspHal drives spi_master + GPIO directly.
+    # Requires CONFIG_FREERTOS_HZ=1000 (EspHal refuses to build below that
+    # unless relaxed; accurate delay() matters for RX windows/CAD timing).
+    from esphome.components.esp32 import (
+        add_idf_component,
+        add_idf_sdkconfig_option,
+    )
 
-    # RadioLib ships both as a PlatformIO library (Arduino) and as an
-    # ESP-IDF managed component (generic HAL). Arduino builds use the
-    # former; IDF builds (required for C6/C5/H2/P4) use the latter, where
-    # EspHal drives spi_master + GPIO directly.
-    if CORE.using_arduino:
-        cg.add_library("jgromes/RadioLib", "7.8.1")
-        # RadioLib's Arduino HAL needs Arduino's SPI library. ESPHome builds
-        # all ESP32 targets through ESP-IDF with selective Arduino
-        # compilation, so the SPI library (include path + sources) must be
-        # enabled explicitly.
-        cg.add_library("SPI", None)
-    else:
-        from esphome.components.esp32 import (
-            add_idf_component,
-            add_idf_sdkconfig_option,
-        )
-
-        add_idf_component(name="jgromes/radiolib", ref="7.8.1")
-        # EspHal refuses to build below 1000 Hz unless explicitly relaxed;
-        # accurate delay() matters for LoRaWAN RX windows and CAD timing.
-        add_idf_sdkconfig_option("CONFIG_FREERTOS_HZ", 1000)
+    add_idf_component(name="jgromes/radiolib", ref="7.8.1")
+    add_idf_sdkconfig_option("CONFIG_FREERTOS_HZ", 1000)
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     if CONF_ON_PACKET in config:
@@ -307,8 +294,8 @@ async def to_code(config: ConfigType) -> None:
             ],
             config[CONF_ON_PACKET],
         )
-    # RadioLib drives the pins itself through Arduino APIs, so only the
-    # raw GPIO numbers cross the codegen boundary.
+    # RadioLib's EspHal drives the pins itself; only the raw GPIO numbers
+    # cross the codegen boundary.
     for key, setter in (
         (CONF_CS_PIN, "set_cs_pin"),
         (CONF_SCK_PIN, "set_sck_pin"),

@@ -2,7 +2,6 @@
 # Same D-label stacking as the S3 example, translated to C6 GPIOs:
 #   D1->GPIO1 DIO1, D2->GPIO2 RST, D3->GPIO21 BUSY, D4->GPIO22 CS,
 #   D5->GPIO23 RF_SW, D8->GPIO19 SCK, D9->GPIO20 MISO, D10->GPIO18 MOSI
-# C6 has no Arduino support in ESPHome, so this is ESP-IDF only.
 
 esphome:
   name: lora-test-c6

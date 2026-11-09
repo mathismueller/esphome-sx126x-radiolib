@@ -14,22 +14,15 @@ component keeps the core YAML (`send_packet`, `on_packet`, same LoRa params) and
 adds `rxen_pin` / `txen_pin`, driven automatically by RadioLib on every
 TX/RX/standby transition.
 
-Verified on: XIAO ESP32S3 + Wio-SX1262 V1.0, 868 MHz, BW125, SF9, TCXO 1.8 V —
-clean bidirectional PingPong at RSSI -22 dBm before this was written.
-IDF port verified on the same S3 board: `radio ready` in 54 ms, PING TX
-loop stable, same pins/RF-switch behavior (see `examples/xiao_s3_wio_idf.yaml`).
-C6 IDF verified live as well: `radio ready`, bidirectional S3↔C6 PingPong
-at RSSI -10 dBm / SNR 11 dB (see `pingpong_initiator_idf.yaml` +
-`pingpong_responder_idf.yaml`).
+Verified live: XIAO ESP32S3 + Wio-SX1262 V1.0, 868 MHz, BW125, SF9, TCXO 1.8 V —
+bidirectional S3↔C6 PingPong at RSSI -10 dBm / SNR 11 dB, `radio ready`
+in ~50 ms on both boards.
 
 ## Requirements
 
 - ESPHome 2026.10.2 (validation + codegen target)
-- `esp32` with `framework: type: arduino` (S3/S2/C3/classic) or
-  `framework: type: esp-idf` (all variants, required for C6/C5/H2/P4).
-  Arduino builds use RadioLib's Arduino HAL plus Arduino's SPI library
-  (enabled via `cg.add_library("SPI", None)`); IDF builds use RadioLib's
-  native `EspHal` (`jgromes/radiolib` IDF component, `CONFIG_FREERTOS_HZ=1000`).
+- `esp32` with `framework: type: esp-idf` (all variants; RadioLib's native
+  `EspHal`, `jgromes/radiolib` IDF component, `CONFIG_FREERTOS_HZ=1000`).
 - Python >= 3.12 for the tooling/tests in this repo
 
 ## Use
@@ -62,12 +55,12 @@ sx126x_radiolib:
 ```
 
 Full example: `examples/xiao_s3_wio_v10.yaml` (XIAO ESP32S3 + Wio-SX1262 V1.0).
-IDF equivalents: `examples/xiao_s3_wio_idf.yaml` (S3),
-`examples/xiao_c6_wio_idf.yaml` (XIAO ESP32C6, same D-label stacking:
+C6 equivalent: `examples/xiao_c6_wio_v10.yaml` (same D-label stacking:
 D1/GPIO1 DIO1, D2/GPIO2 RST, D3/GPIO21 BUSY, D4/GPIO22 CS, D5/GPIO23 RF_SW,
 D8/GPIO19 SCK, D9/GPIO20 MISO, D10/GPIO18 MOSI).
-PingPong pair: `pingpong_initiator_idf.yaml` (S3 TX) +
-`pingpong_responder_idf.yaml` (C6 RX/TX).
+PingPong: `pingpong_initiator.yaml` (S3 TX) + `pingpong_responder.yaml` (S3 RX/TX)
+for single-variant test, or `pingpong_responder_c6.yaml` (C6 RX/TX) for the
+verified S3↔C6 pair.
 
 Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
 `send_packet` (`data:` string or byte list, templatable), `set_mode_rx`,

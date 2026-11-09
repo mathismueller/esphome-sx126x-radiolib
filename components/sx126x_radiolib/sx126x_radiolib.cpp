@@ -2,13 +2,9 @@
 
 #include <RadioLib.h>
 
-#if defined(ESP_PLATFORM) && !defined(ARDUINO)
 #include "driver/gpio.h"
 #include "esp_err.h"
 #include "esp_intr_alloc.h"
-#else
-#include <SPI.h>
-#endif
 
 #include "esphome/core/log.h"
 
@@ -21,18 +17,12 @@ void IRAM_ATTR SX126xRadioLib::gpio_intr(void *arg) { static_cast<SX126xRadioLib
 void SX126xRadioLib::setup() {
   ESP_LOGCONFIG(TAG, "Setting up SX126x via RadioLib...");
 
-#if defined(ESP_PLATFORM) && !defined(ARDUINO)
   // Native IDF HAL: EspHal owns the spi_master bus (SPI2_HOST, 2 MHz
   // default, software CS) and GPIO via IDF drivers. RadioLib.h pulls in
   // EspHal.h automatically for generic ESP_PLATFORM builds.
   this->hal_ = new EspHal(static_cast<int8_t>(this->sck_pin_), static_cast<int8_t>(this->miso_pin_),
                           static_cast<int8_t>(this->mosi_pin_));
   this->radio_ = new SX1262(new Module(this->hal_, this->cs_pin_, this->dio1_pin_, this->rst_pin_, this->busy_pin_));
-#else
-  SPI.begin(this->sck_pin_, this->miso_pin_, this->mosi_pin_, this->cs_pin_);
-
-  this->radio_ = new SX1262(new Module(this->cs_pin_, this->dio1_pin_, this->rst_pin_, this->busy_pin_));
-#endif
 
   // MCU-driven antenna switch pins (e.g. Wio-SX1262 header board RF_SW).
   // RadioLib drives these automatically on every TX/RX/standby transition.
@@ -100,7 +90,6 @@ void SX126xRadioLib::setup() {
   this->radio_->setDio2AsRfSwitch(this->rf_switch_);
 
   // DIO1 interrupt latches on packet arrival; loop() drains it.
-#if defined(ESP_PLATFORM) && !defined(ARDUINO)
   gpio_config_t io_conf = {};
   io_conf.pin_bit_mask = (1ULL << this->dio1_pin_);
   io_conf.mode = GPIO_MODE_INPUT;
@@ -132,9 +121,6 @@ void SX126xRadioLib::setup() {
     this->mark_failed();
     return;
   }
-#else
-  attachInterruptArg(this->dio1_pin_, gpio_intr, this, RISING);
-#endif
 
   if (this->rx_start_) {
     this->start_rx_();

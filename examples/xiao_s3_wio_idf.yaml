@@ -1,0 +1,66 @@
+# Example: Seeed XIAO ESP32S3 + Wio-SX1262 V1.0, ESP-IDF framework.
+# Same D-to-D stacking as the Arduino example; IDF is the unified path
+# (also required for C6/C5/H2/P4, which have no Arduino support in ESPHome).
+esphome:
+  name: lora-test-idf
+  friendly_name: LoRa Test IDF
+
+esp32:
+  board: seeed_xiao_esp32s3
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+
+wifi:
+  ssid: "dummy"
+  password: "dummy12345"
+  ap:
+    ssid: "LoRa Test IDF"
+
+external_components:
+  # Release source. For local development against a clone, use:
+  #   - source:
+  #       type: local
+  #       path: ../components
+  #     components: [sx126x_radiolib]
+  - source: github://mathismueller/esphome-sx126x-radiolib@main
+    components: [sx126x_radiolib]
+
+sx126x_radiolib:
+  id: radio
+  cs_pin: GPIO5
+  sck_pin: GPIO7
+  mosi_pin: GPIO9
+  miso_pin: GPIO8
+  dio1_pin: GPIO2
+  busy_pin: GPIO4
+  rst_pin: GPIO3
+  rxen_pin: GPIO6
+  rf_switch: true
+  hw_version: sx1262
+  modulation: LORA
+  frequency: 868.0MHz
+  bandwidth: 125_0kHz
+  spreading_factor: 9
+  coding_rate: CR_4_7
+  sync_value: [0x12]
+  preamble_size: 8
+  crc_enable: true
+  pa_power: 10
+  tcxo_voltage: 1_8V
+  on_packet:
+    then:
+      - lambda: |-
+          ESP_LOGI("lora", "rx len=%d rssi=%.1f snr=%.1f", x.size(), rssi, snr);
+
+button:
+  - platform: template
+    name: "Transmit Packet"
+    on_press:
+      then:
+        - sx126x_radiolib.send_packet:
+            data: [0xC5, 0x51, 0x78, 0x82]

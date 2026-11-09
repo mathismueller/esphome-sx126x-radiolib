@@ -272,11 +272,29 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config: ConfigType) -> None:
-    cg.add_library("jgromes/RadioLib", "7.8.1")
-    # RadioLib's Arduino HAL needs Arduino's SPI library. ESPHome builds all
-    # ESP32 targets through ESP-IDF with selective Arduino compilation, so the
-    # SPI library (include path + sources) must be enabled explicitly.
-    cg.add_library("SPI", None)
+    from esphome.core import CORE
+
+    # RadioLib ships both as a PlatformIO library (Arduino) and as an
+    # ESP-IDF managed component (generic HAL). Arduino builds use the
+    # former; IDF builds (required for C6/C5/H2/P4) use the latter, where
+    # EspHal drives spi_master + GPIO directly.
+    if CORE.using_arduino:
+        cg.add_library("jgromes/RadioLib", "7.8.1")
+        # RadioLib's Arduino HAL needs Arduino's SPI library. ESPHome builds
+        # all ESP32 targets through ESP-IDF with selective Arduino
+        # compilation, so the SPI library (include path + sources) must be
+        # enabled explicitly.
+        cg.add_library("SPI", None)
+    else:
+        from esphome.components.esp32 import (
+            add_idf_component,
+            add_idf_sdkconfig_option,
+        )
+
+        add_idf_component(name="jgromes/radiolib", ref="7.8.1")
+        # EspHal refuses to build below 1000 Hz unless explicitly relaxed;
+        # accurate delay() matters for LoRaWAN RX windows and CAD timing.
+        add_idf_sdkconfig_option("CONFIG_FREERTOS_HZ", 1000)
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     if CONF_ON_PACKET in config:

@@ -1,0 +1,70 @@
+# PingPong initiator (IDF): XIAO ESP32S3 + Wio-SX1262 V1.0, sends PING, logs PONG.
+esphome:
+  name: lora-ping-idf
+  friendly_name: LoRa Ping IDF
+
+esp32:
+  board: seeed_xiao_esp32s3
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+
+wifi:
+  ssid: "dummy"
+  password: "dummy12345"
+  ap:
+    ssid: "LoRa Ping IDF"
+
+external_components:
+  # Release source. For local development against a clone, use:
+  #   - source:
+  #       type: local
+  #       path: ../components
+  #     components: [sx126x_radiolib]
+  - source: github://mathismueller/esphome-sx126x-radiolib@main
+    components: [sx126x_radiolib]
+
+sx126x_radiolib:
+  id: radio
+  cs_pin: GPIO5
+  sck_pin: GPIO7
+  mosi_pin: GPIO9
+  miso_pin: GPIO8
+  dio1_pin: GPIO2
+  busy_pin: GPIO4
+  rst_pin: GPIO3
+  rxen_pin: GPIO6
+  rf_switch: true
+  hw_version: sx1262
+  modulation: LORA
+  frequency: 868.0MHz
+  bandwidth: 125_0kHz
+  spreading_factor: 9
+  coding_rate: CR_4_7
+  sync_value: [0x12]
+  preamble_size: 8
+  crc_enable: true
+  pa_power: 10
+  tcxo_voltage: 1_8V
+  on_packet:
+    then:
+      - lambda: |-
+          std::string msg(x.begin(), x.end());
+          ESP_LOGI("ping", "RX '%s' len=%d rssi=%.1f snr=%.1f",
+                   msg.c_str(), x.size(), rssi, snr);
+
+interval:
+  - interval: 5s
+    then:
+      - sx126x_radiolib.send_packet:
+          id: radio
+          data: !lambda |-
+            static int counter = 0;
+            char buf[32];
+            snprintf(buf, sizeof(buf), "PING #%d", counter++);
+            ESP_LOGI("ping", "TX %s", buf);
+            return std::vector<uint8_t>(buf, buf + strlen(buf));

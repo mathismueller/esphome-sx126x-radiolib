@@ -81,7 +81,8 @@ class SX126xRadioLib final : public Component {
   Trigger<std::vector<uint8_t>, float, float> packet_trigger_;
   std::vector<SX126xRadioLibListener *> listeners_;
 
-  // Raw GPIO numbers: RadioLib drives the pins itself through Arduino APIs.
+  // Raw GPIO numbers: Arduino HAL drives the pins itself; IDF HAL (EspHal)
+  // is constructed from the same numbers in setup().
   uint8_t cs_pin_{0};
   uint8_t sck_pin_{0};
   uint8_t mosi_pin_{0};
@@ -94,6 +95,7 @@ class SX126xRadioLib final : public Component {
   bool has_rxen_pin_{false};
   bool has_txen_pin_{false};
 
+  RadioLibHal *hal_{nullptr};
   SX1262 *radio_{nullptr};
   volatile bool dio1_flag_{false};
 

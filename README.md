@@ -16,14 +16,19 @@ TX/RX/standby transition.
 
 Verified on: XIAO ESP32S3 + Wio-SX1262 V1.0, 868 MHz, BW125, SF9, TCXO 1.8 V —
 clean bidirectional PingPong at RSSI -22 dBm before this was written.
+IDF port verified on the same S3 board: `radio ready` in 54 ms, PING TX
+loop stable, same pins/RF-switch behavior (see `examples/xiao_s3_wio_idf.yaml`).
+C6 IDF firmware compiles (`examples/xiao_c6_wio_idf.yaml`); air test pending
+hardware (C6 did not enumerate during this session).
 
 ## Requirements
 
 - ESPHome 2026.10.2 (validation + codegen target)
-- `esp32` with `framework: type: arduino` (RadioLib uses its Arduino HAL;
-  the component enables Arduino's SPI library itself via
-  `cg.add_library("SPI", None)`, required because ESPHome builds ESP32 targets
-  through ESP-IDF with selective Arduino compilation)
+- `esp32` with `framework: type: arduino` (S3/S2/C3/classic) or
+  `framework: type: esp-idf` (all variants, required for C6/C5/H2/P4).
+  Arduino builds use RadioLib's Arduino HAL plus Arduino's SPI library
+  (enabled via `cg.add_library("SPI", None)`); IDF builds use RadioLib's
+  native `EspHal` (`jgromes/radiolib` IDF component, `CONFIG_FREERTOS_HZ=1000`).
 - Python >= 3.12 for the tooling/tests in this repo
 
 ## Use
@@ -56,6 +61,12 @@ sx126x_radiolib:
 ```
 
 Full example: `examples/xiao_s3_wio_v10.yaml` (XIAO ESP32S3 + Wio-SX1262 V1.0).
+IDF equivalents: `examples/xiao_s3_wio_idf.yaml` (S3),
+`examples/xiao_c6_wio_idf.yaml` (XIAO ESP32C6, same D-label stacking:
+D1/GPIO1 DIO1, D2/GPIO2 RST, D3/GPIO21 BUSY, D4/GPIO22 CS, D5/GPIO23 RF_SW,
+D8/GPIO19 SCK, D9/GPIO20 MISO, D10/GPIO18 MOSI).
+PingPong pair: `pingpong_initiator_idf.yaml` (S3 TX) +
+`pingpong_responder_idf.yaml` (C6 RX/TX).
 
 Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
 `send_packet` (`data:` string or byte list, templatable), `set_mode_rx`,

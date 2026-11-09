@@ -58,9 +58,11 @@ Full example: `examples/xiao_s3_wio_v10.yaml` (XIAO ESP32S3 + Wio-SX1262 V1.0).
 C6 equivalent: `examples/xiao_c6_wio_v10.yaml` (same D-label stacking:
 D1/GPIO1 DIO1, D2/GPIO2 RST, D3/GPIO21 BUSY, D4/GPIO22 CS, D5/GPIO23 RF_SW,
 D8/GPIO19 SCK, D9/GPIO20 MISO, D10/GPIO18 MOSI).
-PingPong: `pingpong_initiator.yaml` (S3 TX) + `pingpong_responder.yaml` (S3 RX/TX)
-for single-variant test, or `pingpong_responder_c6.yaml` (C6 RX/TX) for the
-verified S3↔C6 pair.
+PingPong: `pingpong_initiator.yaml` (S3 TX) + `pingpong_responder_c6.yaml`
+(C6 RX/TX) for the verified S3↔C6 pair, in LoRa or
+(`fsk_pingpong_initiator.yaml` + `fsk_pingpong_responder_c6.yaml`) FSK.
+Transport: `packet_transport_provider.yaml` (S3) +
+`packet_transport_receiver_c6.yaml` (C6).
 
 Same actions/triggers as core, namespaced `sx126x_radiolib.*`:
 `send_packet` (`data:` string or byte list, templatable), `set_mode_rx`,

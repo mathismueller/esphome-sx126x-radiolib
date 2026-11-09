@@ -1,8 +1,8 @@
 # PingPong responder: XIAO ESP32C6 + Wio-SX1262 V1.0, replies PONG to PING.
 # Same D-label stacking as S3, translated to C6 GPIOs.
 esphome:
-  name: lora-pong-idf
-  friendly_name: LoRa Pong IDF
+  name: lora-pong-c6
+  friendly_name: LoRa Pong C6
 
 esp32:
   board: seeed_xiao_esp32c6
@@ -18,7 +18,7 @@ wifi:
   ssid: "dummy"
   password: "dummy12345"
   ap:
-    ssid: "LoRa Pong IDF"
+    ssid: "LoRa Pong C6"
 
 external_components:
   # Release source. For local development against a clone, use:

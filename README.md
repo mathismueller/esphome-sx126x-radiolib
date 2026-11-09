@@ -18,8 +18,9 @@ Verified on: XIAO ESP32S3 + Wio-SX1262 V1.0, 868 MHz, BW125, SF9, TCXO 1.8 V —
 clean bidirectional PingPong at RSSI -22 dBm before this was written.
 IDF port verified on the same S3 board: `radio ready` in 54 ms, PING TX
 loop stable, same pins/RF-switch behavior (see `examples/xiao_s3_wio_idf.yaml`).
-C6 IDF firmware compiles (`examples/xiao_c6_wio_idf.yaml`); air test pending
-hardware (C6 did not enumerate during this session).
+C6 IDF verified live as well: `radio ready`, bidirectional S3↔C6 PingPong
+at RSSI -10 dBm / SNR 11 dB (see `pingpong_initiator_idf.yaml` +
+`pingpong_responder_idf.yaml`).
 
 ## Requirements
 
